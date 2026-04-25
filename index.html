@@ -149,12 +149,10 @@
         function displayHistory() {
             const logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
             const list = document.getElementById('historyList');
-            
-            
-            // アプリ起動用URLスキーム（より深い送金フローを呼び出す）
-            const paypayAppScheme = "paypay://send";
+            const paypayAppScheme = "paypay://p2p-transfer";
 
             list.innerHTML = logs.map(log => {
+                // 文法エラーを修正しました
                 const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\n【PayPay送金のやり方はこちら】\n①LINEのトークルーム左下の「＋」をタップ。\n②PayPayアイコンをタップ。`;
 
                 return `
