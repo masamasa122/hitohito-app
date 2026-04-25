@@ -151,12 +151,12 @@
             const list = document.getElementById('historyList');
             
             // LINE用URL（公式の汎用送金リンク）
-            const paypayWebUrl = "https://paypay.ne.jp/";
+            const paypayWebUrl = "①LINEのトークルーム左下の「＋」をタップ。"\n"②PayPayアイコンをタップ。";
             // アプリ起動用URLスキーム（より深い送金フローを呼び出す）
             const paypayAppScheme = "paypay://send";
 
             list.innerHTML = logs.map(log => {
-                const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\n【PayPay送金はこちら】\n${paypayWebUrl}`;
+                const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\n【PayPay送金のやり方はこちら】\n${paypayWebUrl}`;
 
                 return `
                 <div class="card p-5 shadow-sm border-orange-100 relative">
