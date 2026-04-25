@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヒトヒト - 名前で割り勘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: sans-serif; }
+        .card { background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; }
+        .input-focus:focus { outline: 2px solid #f97316; border-color: transparent; }
+        .member-chip { border: 1px solid #e2e8f0; border-radius: 99px; padding: 4px 12px; font-size: 0.875rem; background: #fff; }
+        #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 12px; position: fixed; z-index: 100; bottom: 30px; left: 50%; transform: translateX(-50%); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-md mx-auto pb-20">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-black text-orange-500 tracking-tight">ヒトヒト</h1>
+        </header>
+        
+        <!-- ステップ1: 基本情報 -->
+        <div class="card p-6 mb-4 shadow-sm space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">イベント名</label>
+                <input type="text" id="eventTitle" class="w-full border p-3 rounded-xl input-focus" placeholder="例：〇〇新年会">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">合計金額</label>
+                <input type="number" id="totalAmount" class="w-full border p-3 rounded-xl input-focus" placeholder="0">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">参加者の名前（スペースや読点で区切る）</label>
+                <textarea id="memberNames" class="w-full border p-3 rounded-xl input-focus" rows="2" placeholder="田中 佐藤 鈴木..." oninput="updateMemberLists()"></textarea>
+                <p class="text-[10px] text-gray-400 mt-1">※名前を入力すると下の選択肢に反映されます</p>
+            </div>
+        </div>
+
+        <!-- ステップ2: 条件設定 -->
+        <div class="card p-6 mb-6 shadow-sm space-y-6">
+            <h2 class="font-bold text-gray-800 border-b pb-2">こだわり条件</h2>
+            
+            <!-- お酒セクション -->
+            <div>
+                <span class="text-sm font-bold text-gray-700">お酒を飲まない人を選択</span>
+                <div id="ndList" class="flex flex-wrap gap-2 mt-2">
+                    <p class="text-xs text-gray-400 italic">名前を入力してください</p>
+                </div>
+                <div id="ndSettings" class="mt-3 hidden">
+                    <input type="number" id="ndDiscount" class="w-full border p-2 rounded-lg" placeholder="1人あたりの割引額(円)">
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- 割合セクション -->
+            <div>
+                <span class="text-sm font-bold text-gray-700">割合(%)を個別に指定する人</span>
+                <div id="percentList" class="flex flex-wrap gap-2 mt-2">
+                    <p class="text-xs text-gray-400 italic">名前を入力してください</p>
+                </div>
+                <div id="percentInputs" class="mt-3 space-y-2"></div>
+            </div>
+        </div>
+
+        <button onclick="calculate()" class="w-full bg-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-lg mb-10">
+            結果を計算＆保存
+        </button>
+
+        <!-- 履歴エリア -->
+        <div id="historySection">
+            <h2 class="font-bold text-gray-500 mb-4">🕒 計算ログ</h2>
+            <div id="historyList" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="toast">コピーしました！</div>
+
+    <script>
+        window.onload = displayHistory;
+
+        // 名前入力欄からリストを動的に作成
+        function updateMemberLists() {
+            const rawNames = document.getElementById('memberNames').value;
+            const names = rawNames.split(/[\s,、]+/).filter(n => n.trim() !== "");
+            
+            const ndList = document.getElementById('ndList');
+            const percentList = document.getElementById('percentList');
+            
+            if (names.length === 0) {
+                ndList.innerHTML = percentList.innerHTML = '<p class="text-xs text-gray-400 italic">名前を入力してください</p>';
+                return;
+            }
+
+            // お酒リスト生成
+            ndList.innerHTML = names.map(name => `
+                <label class="member-chip cursor-pointer has-[:checked]:bg-orange-100 has-[:checked]:border-orange-500">
+                    <input type="checkbox" class="hidden nd-check" value="${name}" onchange="toggleNdSettings()"> ${name}
+                </label>
+            `).join('');
+
+            // 割合リスト生成
+            percentList.innerHTML = names.map(name => `
+                <label class="member-chip cursor-pointer has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
+                    <input type="checkbox" class="hidden p-check" value="${name}" onchange="updatePercentInputs()"> ${name}
+                </label>
+            `).join('');
+        }
+
+        function toggleNdSettings() {
+            const checks = document.querySelectorAll('.nd-check:checked');
+            document.getElementById('ndSettings').classList.toggle('hidden', checks.length === 0);
+        }
+
+        function updatePercentInputs() {
+            const checks = document.querySelectorAll('.p-check:checked');
+            const container = document.getElementById('percentInputs');
+            container.innerHTML = Array.from(checks).map(cb => `
+                <div class="flex items-center gap-2 animate-fadeIn">
+                    <span class="text-xs w-20 font-bold">${cb.value}:</span>
+                    <input type="number" class="percent-val w-full border p-2 rounded-lg" data-name="${cb.value}" placeholder="割合(%)">
+                </div>
+            `).join('');
+        }
+
+        function calculate() {
+            const title = document.getElementById('eventTitle').value || "無題のイベント";
+            const total = parseInt(document.getElementById('totalAmount').value);
+            const rawNames = document.getElementById('memberNames').value;
+            const names = rawNames.split(/[\s,、]+/).filter(n => n.trim() !== "");
+            
+            if (!total || names.length === 0) return alert("金額と名前を入力してください");
+
+            const totalPeople = names.length;
+            const ndChecks = Array.from(document.querySelectorAll('.nd-check:checked')).map(c => c.value);
+            const pChecks = Array.from(document.querySelectorAll('.percent-val')).map(i => ({name: i.dataset.name, val: parseFloat(i.value) || 0}));
+            const ndDiscount = parseInt(document.getElementById('ndDiscount').value) || 0;
+
+            let resultLines = [];
+            let currentPaidSum = 0;
+
+            // 個別割合がある場合
+            if (pChecks.length > 0) {
+                let filledSum = pChecks.reduce((s, curr) => s + curr.val, 0);
+                if (filledSum > 100) return alert("割合の合計が100%を超えています");
+                
+                const unFilledNames = names.filter(n => !pChecks.find(p => p.name === n));
+                const autoP = unFilledNames.length > 0 ? (100 - filledSum) / unFilledNames.length : 0;
+
+                names.forEach(name => {
+                    const custom = pChecks.find(p => p.name === name);
+                    const p = custom ? custom.val : autoP;
+                    const amt = Math.floor(total * (p / 100));
+                    currentPaidSum += amt;
+                    resultLines.push(`${name}: ${amt.toLocaleString()}円 (${p.toFixed(1)}%)`);
+                });
+            } else {
+                // 通常もしくはお酒割引
+                const base = Math.floor((total + (ndChecks.length * ndDiscount)) / totalPeople);
+                names.forEach(name => {
+                    const isND = ndChecks.includes(name);
+                    const amt = isND ? base - ndDiscount : base;
+                    currentPaidSum += amt;
+                    resultLines.push(`${name}: ${amt.toLocaleString()}円 ${isND ? '(飲まない)' : ''}`);
+                });
+            }
+
+            const remainder = total - currentPaidSum;
+            saveLog({ id: Date.now(), title, total, results: resultLines, remainder, date: new Date().toLocaleString() });
+            displayHistory();
+        }
+
+        function saveLog(entry) {
+            let logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
+            logs.unshift(entry);
+            localStorage.setItem('hitohito_logs', JSON.stringify(logs));
+        }
+
+        function displayHistory() {
+            const logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
+            const list = document.getElementById('historyList');
+            list.innerHTML = logs.map(log => {
+                const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}`\n\n【送金はこちらから】\nhttps://qr.paypay.ne.jp/`;
+// さらに、履歴からコピーした時も反映されるように、lastMessageを更新
+lastMessage = shareText;
+                return `
+                <div class="card p-5 shadow-sm border-orange-100 relative">
+                    <button onclick="deleteLog(${log.id})" class="absolute top-4 right-4 text-gray-300 hover:text-red-500">✕</button>
+                    <h3 class="font-bold text-orange-600 mb-2">${log.title}</h3>
+                    <div class="text-sm space-y-1 mb-4 text-gray-600">${log.results.map(r => `<div>${r}</div>`).join('')}
+                    ${log.remainder > 0 ? `<div class="font-bold text-orange-500 text-xs">余り: ${log.remainder}円</div>` : ''}</div>
+                    <div class="flex gap-2">
+                        <button onclick="copyRaw('${encodeURIComponent(shareText)}')" class="flex-1 bg-green-500 text-white text-xs font-bold py-2 rounded-lg">LINEコピー</button>
+                        <a href="https://qr.paypay.ne.jp/" target="_blank" rel="noopener noreferrer" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl flex items-center justify-center"> PayPayアプリを開く </a>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function deleteLog(id) {
+            let logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
+            localStorage.setItem('hitohito_logs', JSON.stringify(logs.filter(l => l.id !== id)));
+            displayHistory();
+        }
+
+        function copyRaw(text) {
+            navigator.clipboard.writeText(decodeURIComponent(text)).then(() => {
+                const toast = document.getElementById("toast");
+                toast.className = "show";
+                setTimeout(() => { toast.className = ""; }, 3000);
+            });
+        }
+    </script>
+</body>
+</html>
