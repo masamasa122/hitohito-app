@@ -60,7 +60,7 @@
         </button>
 
         <div id="historySection">
-            <h2 class="font-bold text-gray-500 mb-4 flex items-center gap-2">🕒 計算ログ</h2>
+            <h2 class="font-bold text-gray-500 mb-4 flex items-center gap-2">🕒 計算ログ (このタブのみ)</h2>
             <div id="historyList" class="space-y-4"></div>
         </div>
     </div>
@@ -140,19 +140,19 @@
             displayHistory();
         }
 
+        // sessionStorageに変更（ブラウザを閉じると消える）
         function saveLog(entry) {
-            let logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
+            let logs = JSON.parse(sessionStorage.getItem('hitohito_logs') || '[]');
             logs.unshift(entry);
-            localStorage.setItem('hitohito_logs', JSON.stringify(logs));
+            sessionStorage.setItem('hitohito_logs', JSON.stringify(logs));
         }
 
         function displayHistory() {
-            const logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
+            let logs = JSON.parse(sessionStorage.getItem('hitohito_logs') || '[]');
             const list = document.getElementById('historyList');
             const paypayAppScheme = "paypay://p2p-transfer";
 
             list.innerHTML = logs.map(log => {
-                // 文法エラーを修正しました
                 const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\n【PayPay送金のやり方はこちら】\n①LINEのトークルーム左下の「＋」をタップ。\n②PayPayアイコンをタップ。`;
 
                 return `
@@ -172,8 +172,8 @@
         }
 
         function deleteLog(id) {
-            let logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
-            localStorage.setItem('hitohito_logs', JSON.stringify(logs.filter(l => l.id !== id)));
+            let logs = JSON.parse(sessionStorage.getItem('hitohito_logs') || '[]');
+            sessionStorage.setItem('hitohito_logs', JSON.stringify(logs.filter(l => l.id !== id)));
             displayHistory();
         }
 
