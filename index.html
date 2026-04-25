@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ヒトヒト - みんなの割り勘アプリ</title>
+    <title>ヒトヒト - 納得の割り勘アプリ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f8fafc; font-family: sans-serif; }
@@ -19,11 +19,10 @@
 <body class="p-6">
     <div class="max-w-md mx-auto pb-20">
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-black text-orange-500 tracking-tight">ヒトヒト</h1>
+            <h1 class="text-4xl font-black text-orange-500 tracking-tight text-center">ヒトヒト</h1>
             <p class="text-[10px] text-gray-400 mt-2">スマートな割り勘とスムーズな送金を。</p>
         </header>
         
-        <!-- 基本入力 -->
         <div class="card p-6 mb-4 shadow-sm space-y-4">
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">イベント名</label>
@@ -34,19 +33,16 @@
                 <input type="number" id="totalAmount" class="w-full border p-3 rounded-xl input-focus" placeholder="0">
             </div>
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">参加者の名前（スペースや読点で区切る）</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">参加者の名前（スペース等で区切る）</label>
                 <textarea id="memberNames" class="w-full border p-3 rounded-xl input-focus" rows="2" placeholder="田中 佐藤 鈴木..." oninput="updateMemberLists()"></textarea>
             </div>
         </div>
 
-        <!-- 条件設定 -->
         <div class="card p-6 mb-6 shadow-sm space-y-6">
             <h2 class="font-bold text-gray-800 border-b pb-2">こだわり条件</h2>
             <div>
                 <span class="text-sm font-bold text-gray-700">お酒を飲まない人を選択</span>
-                <div id="ndList" class="flex flex-wrap gap-2 mt-2">
-                    <p class="text-xs text-gray-400 italic">名前を入力してください</p>
-                </div>
+                <div id="ndList" class="flex flex-wrap gap-2 mt-2"><p class="text-xs text-gray-400 italic">名前を入力してください</p></div>
                 <div id="ndSettings" class="mt-3 hidden">
                     <input type="number" id="ndDiscount" class="w-full border p-2 rounded-lg" placeholder="1人あたりの割引額(円)">
                 </div>
@@ -54,9 +50,7 @@
             <hr>
             <div>
                 <span class="text-sm font-bold text-gray-700">割合(%)を個別に指定する人</span>
-                <div id="percentList" class="flex flex-wrap gap-2 mt-2">
-                    <p class="text-xs text-gray-400 italic">名前を入力してください</p>
-                </div>
+                <div id="percentList" class="flex flex-wrap gap-2 mt-2"><p class="text-xs text-gray-400 italic">名前を入力してください</p></div>
                 <div id="percentInputs" class="mt-3 space-y-2"></div>
             </div>
         </div>
@@ -65,11 +59,8 @@
             結果を計算＆保存
         </button>
 
-        <!-- 履歴エリア -->
         <div id="historySection">
-            <h2 class="font-bold text-gray-500 mb-4 flex items-center gap-2">
-                <span>🕒</span> 計算ログ
-            </h2>
+            <h2 class="font-bold text-gray-500 mb-4 flex items-center gap-2">🕒 計算ログ</h2>
             <div id="historyList" class="space-y-4"></div>
         </div>
     </div>
@@ -84,23 +75,12 @@
             const names = rawNames.split(/[\s,、\t\n]+/).filter(n => n.trim() !== "");
             const ndList = document.getElementById('ndList');
             const percentList = document.getElementById('percentList');
-            
             if (names.length === 0) {
                 ndList.innerHTML = percentList.innerHTML = '<p class="text-xs text-gray-400 italic">名前を入力してください</p>';
                 return;
             }
-
-            ndList.innerHTML = names.map(name => `
-                <label class="member-chip cursor-pointer">
-                    <input type="checkbox" class="nd-check mr-1" value="${name}" onchange="toggleNdSettings()"> ${name}
-                </label>
-            `).join('');
-
-            percentList.innerHTML = names.map(name => `
-                <label class="member-chip cursor-pointer">
-                    <input type="checkbox" class="p-check mr-1" value="${name}" onchange="updatePercentInputs()"> ${name}
-                </label>
-            `).join('');
+            ndList.innerHTML = names.map(name => `<label class="member-chip cursor-pointer"><input type="checkbox" class="nd-check mr-1" value="${name}" onchange="toggleNdSettings()"> ${name}</label>`).join('');
+            percentList.innerHTML = names.map(name => `<label class="member-chip cursor-pointer"><input type="checkbox" class="p-check mr-1" value="${name}" onchange="updatePercentInputs()"> ${name}</label>`).join('');
         }
 
         function toggleNdSettings() {
@@ -123,7 +103,6 @@
             const total = parseInt(document.getElementById('totalAmount').value);
             const rawNames = document.getElementById('memberNames').value;
             const names = rawNames.split(/[\s,、\t\n]+/).filter(n => n.trim() !== "");
-            
             if (!total || names.length === 0) return alert("金額と名前を入力してください");
 
             const totalPeople = names.length;
@@ -137,10 +116,8 @@
             if (pChecks.length > 0) {
                 let filledSum = pChecks.reduce((s, curr) => s + curr.val, 0);
                 if (filledSum > 100) return alert("割合の合計が100%を超えています");
-                
                 const unFilledNames = names.filter(n => !pChecks.find(p => p.name === n));
                 const autoP = unFilledNames.length > 0 ? (100 - filledSum) / unFilledNames.length : 0;
-
                 names.forEach(name => {
                     const custom = pChecks.find(p => p.name === name);
                     const p = custom ? custom.val : autoP;
@@ -159,7 +136,7 @@
             }
 
             const remainder = total - currentPaidSum;
-            saveLog({ id: Date.now(), title, total, results: resultLines, remainder, date: new Date().toLocaleString('ja-JP', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) });
+            saveLog({ id: Date.now(), title, total, results: resultLines, remainder, date: new Date().toLocaleString() });
             displayHistory();
         }
 
@@ -173,14 +150,17 @@
             const logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
             const list = document.getElementById('historyList');
             
+            // LINE用URL（公式の汎用送金リンク）
+            const paypayWebUrl = "https://paypay.ne.jp/app/p2p-transfer";
+            // アプリ起動用URLスキーム（より深い送金フローを呼び出す）
+            const paypayAppScheme = "paypay://p2p-transfer";
+
             list.innerHTML = logs.map(log => {
-                // LINEコピー用のテキスト（共通送金画面リンク）
-                const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\n【PayPay送金はこちら】\nhttps://paypay.ne.jp/app/send`;
+                const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\n【PayPay送金はこちら】\n${paypayWebUrl}`;
 
                 return `
                 <div class="card p-5 shadow-sm border-orange-100 relative">
                     <button onclick="deleteLog(${log.id})" class="absolute top-4 right-4 text-gray-300 hover:text-red-500">✕</button>
-                    <div class="text-xs text-gray-400 mb-1">${log.date}</div>
                     <h3 class="font-bold text-orange-600 mb-2">${log.title}</h3>
                     <div class="text-sm space-y-1 mb-4 text-gray-600">
                         ${log.results.map(r => `<div>${r}</div>`).join('')}
@@ -188,8 +168,7 @@
                     </div>
                     <div class="flex gap-2">
                         <button onclick="copyRaw('${encodeURIComponent(shareText)}')" class="flex-1 bg-green-500 text-white text-xs font-bold py-3 rounded-lg">LINEコピー</button>
-                        <!-- 直接アプリを起動する命令 -->
-                        <a href="paypay://send" class="flex-1 bg-red-500 text-white text-xs font-bold py-3 rounded-lg text-center flex items-center justify-center">PayPay送金</a>
+                        <a href="${paypayAppScheme}" class="flex-1 bg-red-500 text-white text-xs font-bold py-3 rounded-lg text-center flex items-center justify-center">PayPay送金</a>
                     </div>
                 </div>`;
             }).join('');
