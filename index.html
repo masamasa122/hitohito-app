@@ -151,9 +151,9 @@
             const list = document.getElementById('historyList');
             
             // LINE用URL（公式の汎用送金リンク）
-            const paypayWebUrl = "https://paypay.ne.jp/app/p2p-transfer";
+            const paypayWebUrl = "https://pay.paypay.ne.jp/paypay://send";
             // アプリ起動用URLスキーム（より深い送金フローを呼び出す）
-            const paypayAppScheme = "paypay://p2p-transfer";
+            const paypayAppScheme = "paypay://send";
 
             list.innerHTML = logs.map(log => {
                 const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\n【PayPay送金はこちら】\n${paypayWebUrl}`;
