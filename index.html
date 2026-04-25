@@ -183,7 +183,9 @@
             const logs = JSON.parse(localStorage.getItem('hitohito_logs') || '[]');
             const list = document.getElementById('historyList');
             list.innerHTML = logs.map(log => {
-                const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}\n\nPayPay等で送金願います！`;
+                const shareText = `【${log.title}】\n合計: ${log.total.toLocaleString()}円\n---\n${log.results.join('\n')}${log.remainder > 0 ? '\n端数: ' + log.remainder + '円' : ''}`\n\n【送金はこちらから】\nhttps://qr.paypay.ne.jp/`;
+// さらに、履歴からコピーした時も反映されるように、lastMessageを更新
+lastMessage = shareText;
                 return `
                 <div class="card p-5 shadow-sm border-orange-100 relative">
                     <button onclick="deleteLog(${log.id})" class="absolute top-4 right-4 text-gray-300 hover:text-red-500">✕</button>
@@ -192,7 +194,7 @@
                     ${log.remainder > 0 ? `<div class="font-bold text-orange-500 text-xs">余り: ${log.remainder}円</div>` : ''}</div>
                     <div class="flex gap-2">
                         <button onclick="copyRaw('${encodeURIComponent(shareText)}')" class="flex-1 bg-green-500 text-white text-xs font-bold py-2 rounded-lg">LINEコピー</button>
-                        <button onclick="window.location.href='https://qr.paypay.ne.jp/'" class="flex-1 bg-red-500 text-white text-xs font-bold py-2 rounded-lg">PayPay</button>
+                        <a href="https://qr.paypay.ne.jp/" target="_blank" rel="noopener noreferrer" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl flex items-center justify-center"> PayPayアプリを開く </a>
                     </div>
                 </div>`;
             }).join('');
